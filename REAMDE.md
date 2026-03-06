@@ -1,27 +1,41 @@
 # Service Desk / Helpdesk — React + Vite + Tailwind + Express + PostgreSQL
 
-Система ИТ-поддержки с ролями, регистрацией, назначением заявок и комментариями.
+Система ИТ-поддержки с JWT-авторизацией, регистрацией, ролями и отдельной страницей заявки.
 
-## Что реализовано
-- Регистрация и вход пользователей с ФИО.
+## Основные возможности
+- Главная страница с кнопками **Войти** и **Зарегистрироваться**.
+- Страница регистрации пользователей с ФИО.
+- JWT-авторизация (`register/login/me`).
 - Роли:
-  - **Сотрудник**: создание заявки с подсказками.
-  - **ИТ-поддержка**: общий список заявок + страница «Мои заявки».
-- В заявке хранятся:
-  - кто создал (`created_by`),
-  - кто выполняет (`assigned_to`),
-  - дата выполнения (`due_date`).
+  - **Сотрудник**: создание заявки.
+  - **ИТ-поддержка**: страницы **Все заявки** и **Мои заявки**.
 - Отдельная страница заявки:
   - просмотр деталей,
-  - добавление нескольких комментариев,
+  - комментарии (можно добавлять много раз),
   - завершение и отмена заявки.
-- В общем списке у поддержки есть кнопка отмены (статус `Отменена`).
+- В общем списке есть кнопка **Отменить**, статус `Отменена`.
+
+## Важные исправления
+- Исправлена ошибка создания заявки: поле **Кто создал** теперь заполняется на backend из JWT-пользователя (не нужно передавать вручную).
+- Логин/пароль пользователя PostgreSQL в `docker-compose.yml` изменены на `postgres/postgres`.
+- Фронтенд-код разбит на отдельные файлы страниц/компонентов.
 
 ## Стек
 - Frontend: **React (JS) + Vite + Tailwind CSS**.
-- Backend: **Node.js + Express**.
+- Backend: **Node.js + Express + JWT (`jsonwebtoken`) + `bcryptjs`**.
 - База данных: **PostgreSQL**.
 - Оркестрация: **Docker Compose**.
+
+## Структура фронтенда
+- `frontend/src/App.jsx` — маршрутизация экранов и auth-flow.
+- `frontend/src/api.js` — API-клиент и хранение JWT.
+- `frontend/src/pages/HomePage.jsx` — главная.
+- `frontend/src/pages/LoginPage.jsx` — вход.
+- `frontend/src/pages/RegisterPage.jsx` — регистрация.
+- `frontend/src/pages/UserDashboardPage.jsx` — кабинет сотрудника.
+- `frontend/src/pages/SupportDashboardPage.jsx` — все/мои заявки поддержки.
+- `frontend/src/pages/TicketDetailsPage.jsx` — отдельная страница заявки.
+- `frontend/src/components/TicketTable.jsx` — таблица заявок.
 
 ## Быстрый запуск
 ```bash
@@ -34,24 +48,18 @@ docker compose up --build
 - PostgreSQL: `localhost:5432`
 
 ## Инициализация БД
-`db/init.sql` обновлён и создаёт таблицы:
-- `users`
-- `tickets`
-- `ticket_comments`
+`db/init.sql` обновлён: создаёт таблицы `users`, `tickets`, `ticket_comments` и сидирует тестовую заявку с комментарием.
 
-Также добавляет тестовых пользователей и стартовую заявку с комментарием.
-
-## Тестовые аккаунты
-- Сотрудник: `user / user123`
-- ИТ-поддержка: `support / support123`
+Тестовые пользователи (`user/user123`, `support/support123`) создаются при старте backend в `ensureSchema()`.
 
 ## API
-- `POST /api/auth/register` — регистрация (ФИО, логин, пароль, роль).
+- `POST /api/auth/register` — регистрация.
 - `POST /api/auth/login` — вход.
-- `GET /api/health` — проверка API и БД.
-- `GET /api/tickets` — общий список заявок.
+- `GET /api/auth/me` — текущий пользователь по JWT.
+- `GET /api/tickets` — все заявки.
+- `GET /api/tickets/my` — мои заявки (для поддержки).
 - `GET /api/tickets/:id` — детали заявки + комментарии.
 - `POST /api/tickets` — создать заявку.
-- `PATCH /api/tickets/:id/assign` — назначить исполнителя.
-- `PATCH /api/tickets/:id/status` — сменить статус (`Завершена`, `Отменена` и т.д.).
+- `PATCH /api/tickets/:id/assign` — забрать заявку себе.
+- `PATCH /api/tickets/:id/status` — сменить статус.
 - `POST /api/tickets/:id/comments` — добавить комментарий.
