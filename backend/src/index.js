@@ -206,11 +206,30 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/tickets', authRequired, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, title, description, priority, status, created_by, assigned_to, due_date, created_at FROM tickets ORDER BY created_at DESC'
+      `SELECT id, title, description, priority, status, created_by, assigned_to, due_date, created_at
+       FROM tickets
+       WHERE assigned_to IS NULL
+       ORDER BY created_at DESC`
     );
     return res.json(result.rows.map(mapTicket));
   } catch {
     return res.status(500).json({ message: 'Не удалось получить список заявок' });
+  }
+});
+
+
+app.get('/api/tickets/created', authRequired, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, title, description, priority, status, created_by, assigned_to, due_date, created_at
+       FROM tickets
+       WHERE created_by = $1
+       ORDER BY created_at DESC`,
+      [req.user.fullName]
+    );
+    return res.json(result.rows.map(mapTicket));
+  } catch {
+    return res.status(500).json({ message: 'Не удалось получить мои созданные заявки' });
   }
 });
 

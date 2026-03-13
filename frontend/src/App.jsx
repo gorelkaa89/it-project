@@ -13,6 +13,12 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ticketId, setTicketId] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem('helpdesk_theme') || 'light');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('helpdesk_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const token = getToken();
@@ -65,29 +71,25 @@ export default function App() {
     setPage('home');
   };
 
-  if (page === 'home') {
-    return <HomePage goLogin={() => setPage('login')} goRegister={() => setPage('register')} />;
-  }
+  return (
+    <div className="min-h-screen bg-slate-100 transition-colors dark:bg-slate-950">
+      <button
+        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        className="fixed right-4 top-4 z-50 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm shadow dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+      >
+        {theme === 'dark' ? '☀️ Светлая' : '🌙 Тёмная'}
+      </button>
 
-  if (page === 'login') {
-    return <LoginPage onSubmit={login} onBack={() => setPage('home')} loading={loading} error={authError} />;
-  }
+      {page === 'home' ? <HomePage goLogin={() => setPage('login')} goRegister={() => setPage('register')} /> : null}
+      {page === 'login' ? <LoginPage onSubmit={login} onBack={() => setPage('home')} loading={loading} error={authError} /> : null}
+      {page === 'register' ? <RegisterPage onSubmit={register} onBack={() => setPage('home')} loading={loading} error={authError} /> : null}
 
-  if (page === 'register') {
-    return <RegisterPage onSubmit={register} onBack={() => setPage('home')} loading={loading} error={authError} />;
-  }
+      {!['home', 'login', 'register'].includes(page) && !user ? <HomePage goLogin={() => setPage('login')} goRegister={() => setPage('register')} /> : null}
 
-  if (!user) {
-    return <HomePage goLogin={() => setPage('login')} goRegister={() => setPage('register')} />;
-  }
+      {ticketId && user ? <TicketDetailsPage ticketId={ticketId} user={user} onBack={() => setTicketId(null)} /> : null}
 
-  if (ticketId) {
-    return <TicketDetailsPage ticketId={ticketId} user={user} onBack={() => setTicketId(null)} />;
-  }
-
-  if (user.role === 'support') {
-    return <SupportDashboardPage user={user} onLogout={logout} onOpenTicket={setTicketId} />;
-  }
-
-  return <UserDashboardPage user={user} onLogout={logout} />;
+      {!ticketId && user?.role === 'support' ? <SupportDashboardPage user={user} onLogout={logout} onOpenTicket={setTicketId} /> : null}
+      {!ticketId && user?.role === 'user' ? <UserDashboardPage user={user} onLogout={logout} onOpenTicket={setTicketId} /> : null}
+    </div>
+  );
 }

@@ -56,12 +56,12 @@ export default function TicketDetailsPage({ ticketId, user, onBack }) {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
-      <button className="rounded border px-3 py-2 text-sm" onClick={onBack}>← Назад</button>
+      <button className="rounded border px-3 py-2 text-sm dark:border-slate-700" onClick={onBack}>← Назад</button>
       {error ? <p className="text-red-600">{error}</p> : null}
       {!ticket ? <p>Загрузка...</p> : null}
       {ticket ? (
         <>
-          <section className="rounded-xl bg-white p-6 shadow">
+          <section className="rounded-xl bg-white dark:bg-slate-900 dark:text-slate-100 p-6 shadow">
             <h1 className="text-2xl font-bold">Заявка #{ticket.id}</h1>
             <p className="mt-1 font-medium">{ticket.title}</p>
             <p className="mt-1 text-slate-700">{ticket.description}</p>
@@ -79,7 +79,7 @@ export default function TicketDetailsPage({ ticketId, user, onBack }) {
             ) : null}
           </section>
 
-          <section className="rounded-xl bg-white p-6 shadow">
+          <section className="rounded-xl bg-white dark:bg-slate-900 dark:text-slate-100 p-6 shadow">
             <h2 className="text-xl font-semibold">Комментарии</h2>
             <form className="mt-3 flex gap-2" onSubmit={addComment}>
               <input className="flex-1 rounded border px-3 py-2" placeholder="Добавить комментарий" value={comment} onChange={(e) => setComment(e.target.value)} />
