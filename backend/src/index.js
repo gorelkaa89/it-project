@@ -19,6 +19,11 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'postgres'
 });
 
+
+pool.on('connect', async (client) => {
+  await client.query("SET client_encoding TO 'UTF8'");
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -107,7 +112,7 @@ async function ensureSchema() {
   await pool.query(`
     UPDATE tickets
     SET status = 'Открыта'
-    WHERE status IS NULL OR status NOT IN ('Открыта', 'В работе', 'Завершена', 'Отменена');
+    WHERE status IS NULL OR status NOT IN ('Открыта', 'В работе', 'Завершена', 'Отменена') OR status IN ('Ќ®ў п', 'Новая');
   `);
   const seedUsers = [
     { fullName: 'Сотрудник предприятия', username: 'user', password: 'user123', role: 'user' },
@@ -339,7 +344,8 @@ app.patch('/api/tickets/:id/status', authRequired, supportOnly, async (req, res)
   try {
     const result = await pool.query(
       `UPDATE tickets
-       SET status = $1
+       SET status = $1,
+           due_date = CASE WHEN $1 = 'Завершена' THEN NOW() ELSE due_date END
        WHERE id = $2
        RETURNING id, title, description, priority, status, created_by, assigned_to, due_date, created_at`,
       [nextStatus, ticketId]

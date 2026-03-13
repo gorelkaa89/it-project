@@ -13,6 +13,7 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ticketId, setTicketId] = useState(null);
+  const [supportMode, setSupportMode] = useState('all');
   const [theme, setTheme] = useState(localStorage.getItem('helpdesk_theme') || 'light');
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function App() {
       setToken(result.token);
       setUser(result.user);
       setPage(result.user.role === 'support' ? 'support' : 'user');
+      setSupportMode('all');
     } catch (err) {
       setAuthError(err.message);
     } finally {
@@ -57,6 +59,7 @@ export default function App() {
       setToken(result.token);
       setUser(result.user);
       setPage(result.user.role === 'support' ? 'support' : 'user');
+      setSupportMode('all');
     } catch (err) {
       setAuthError(err.message);
     } finally {
@@ -69,6 +72,16 @@ export default function App() {
     setUser(null);
     setTicketId(null);
     setPage('home');
+    setSupportMode('all');
+  };
+
+  const openTicket = (id) => setTicketId(id);
+
+  const handleStatusApplied = () => {
+    setTicketId(null);
+    if (user?.role === 'support') {
+      setSupportMode('my');
+    }
   };
 
   return (
@@ -86,10 +99,10 @@ export default function App() {
 
       {!['home', 'login', 'register'].includes(page) && !user ? <HomePage goLogin={() => setPage('login')} goRegister={() => setPage('register')} /> : null}
 
-      {ticketId && user ? <TicketDetailsPage ticketId={ticketId} user={user} onBack={() => setTicketId(null)} /> : null}
+      {ticketId && user ? <TicketDetailsPage ticketId={ticketId} user={user} onBack={() => setTicketId(null)} onStatusApplied={handleStatusApplied} /> : null}
 
-      {!ticketId && user?.role === 'support' ? <SupportDashboardPage user={user} onLogout={logout} onOpenTicket={setTicketId} /> : null}
-      {!ticketId && user?.role === 'user' ? <UserDashboardPage user={user} onLogout={logout} onOpenTicket={setTicketId} /> : null}
+      {!ticketId && user?.role === 'support' ? <SupportDashboardPage user={user} onLogout={logout} onOpenTicket={openTicket} forcedMode={supportMode} /> : null}
+      {!ticketId && user?.role === 'user' ? <UserDashboardPage user={user} onLogout={logout} onOpenTicket={openTicket} /> : null}
     </div>
   );
 }
