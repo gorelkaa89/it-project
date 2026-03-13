@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   priority TEXT NOT NULL DEFAULT 'Средний',
-  status TEXT NOT NULL DEFAULT 'Новая',
+  status TEXT NOT NULL DEFAULT 'Открыта',
   created_by TEXT NOT NULL,
   assigned_to TEXT,
   due_date TIMESTAMP,
@@ -32,7 +32,7 @@ SELECT
   'Не работает VPN',
   'Не могу подключиться к корпоративной сети из дома.',
   'Высокий',
-  'Новая',
+  'Открыта',
   'Сотрудник предприятия',
   NULL,
   NOW() + INTERVAL '1 day'

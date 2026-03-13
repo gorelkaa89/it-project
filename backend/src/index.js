@@ -81,7 +81,7 @@ async function ensureSchema() {
       title TEXT NOT NULL,
       description TEXT NOT NULL,
       priority TEXT NOT NULL DEFAULT 'Средний',
-      status TEXT NOT NULL DEFAULT 'Новая',
+      status TEXT NOT NULL DEFAULT 'Открыта',
       created_by TEXT NOT NULL,
       assigned_to TEXT,
       due_date TIMESTAMP,
@@ -102,6 +102,13 @@ async function ensureSchema() {
     ALTER TABLE tickets ADD COLUMN IF NOT EXISTS due_date TIMESTAMP;
   `);
 
+
+
+  await pool.query(`
+    UPDATE tickets
+    SET status = 'Открыта'
+    WHERE status IS NULL OR status NOT IN ('Открыта', 'В работе', 'Завершена', 'Отменена');
+  `);
   const seedUsers = [
     { fullName: 'Сотрудник предприятия', username: 'user', password: 'user123', role: 'user' },
     { fullName: 'Инженер ИТ-поддержки', username: 'support', password: 'support123', role: 'support' }
@@ -287,8 +294,8 @@ app.post('/api/tickets', authRequired, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO tickets (title, description, priority, created_by, due_date)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO tickets (title, description, priority, status, created_by, due_date)
+       VALUES ($1, $2, $3, 'Открыта', $4, $5)
        RETURNING id, title, description, priority, status, created_by, assigned_to, due_date, created_at`,
       [title, description, priority, req.user.fullName, dueDate]
     );
@@ -304,7 +311,7 @@ app.patch('/api/tickets/:id/assign', authRequired, supportOnly, async (req, res)
     const result = await pool.query(
       `UPDATE tickets
        SET assigned_to = $1,
-           status = CASE WHEN status IN ('Новая', 'Отменена') THEN 'В работе' ELSE status END
+           status = CASE WHEN status IN ('Открыта', 'Отменена') THEN 'В работе' ELSE status END
        WHERE id = $2
        RETURNING id, title, description, priority, status, created_by, assigned_to, due_date, created_at`,
       [req.user.fullName, ticketId]
@@ -323,7 +330,7 @@ app.patch('/api/tickets/:id/assign', authRequired, supportOnly, async (req, res)
 app.patch('/api/tickets/:id/status', authRequired, supportOnly, async (req, res) => {
   const ticketId = Number(req.params.id);
   const nextStatus = String(req.body.status || '').trim();
-  const allowedStatuses = ['Новая', 'В работе', 'Завершена', 'Отменена'];
+  const allowedStatuses = ['Открыта', 'В работе', 'Завершена', 'Отменена'];
 
   if (!allowedStatuses.includes(nextStatus)) {
     return res.status(400).json({ message: 'Передан некорректный статус.' });
