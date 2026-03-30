@@ -40,6 +40,15 @@ export default function SupportDashboardPage({ user, onLogout, onOpenTicket, for
     }
   };
 
+  const returnTicket = async (id) => {
+    try {
+      await api(`/api/tickets/${id}/return`, { method: 'PATCH' });
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const cancel = async (id) => {
     try {
       await api(`/api/tickets/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'Отменена' }) });
@@ -71,7 +80,16 @@ export default function SupportDashboardPage({ user, onLogout, onOpenTicket, for
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
         {mode === 'all' ? (
-          <TicketTable tickets={tickets} onOpen={onOpenTicket} onAssign={assign} onCancel={cancel} showAssign compact={false} />
+          <TicketTable
+            tickets={tickets}
+            onOpen={onOpenTicket}
+            onAssign={assign}
+            onReturn={returnTicket}
+            onCancel={cancel}
+            showAssign
+            currentSupportName={user.fullName}
+            compact={false}
+          />
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">

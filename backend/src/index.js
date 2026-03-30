@@ -335,6 +335,29 @@ app.patch('/api/tickets/:id/assign', authRequired, supportOnly, async (req, res)
   }
 });
 
+app.patch('/api/tickets/:id/return', authRequired, supportOnly, async (req, res) => {
+  const ticketId = Number(req.params.id);
+  try {
+    const result = await pool.query(
+      `UPDATE tickets
+       SET assigned_to = NULL,
+           status = 'Открыта'
+       WHERE id = $1
+         AND assigned_to = $2
+       RETURNING id, title, description, priority, status, created_by, assigned_to, due_date, created_at`,
+      [ticketId, req.user.fullName]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Заявка не найдена или не назначена на вас' });
+    }
+
+    return res.json(mapTicket(result.rows[0]));
+  } catch {
+    return res.status(500).json({ message: 'Не удалось вернуть заявку' });
+  }
+});
+
 app.patch('/api/tickets/:id/status', authRequired, supportOnly, async (req, res) => {
   const ticketId = Number(req.params.id);
   const nextStatus = String(req.body.status || '').trim();

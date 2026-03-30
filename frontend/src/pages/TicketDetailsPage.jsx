@@ -43,6 +43,19 @@ export default function TicketDetailsPage({ ticketId, user, onBack, onStatusAppl
     }
   };
 
+  const returnTicket = async () => {
+    try {
+      await api(`/api/tickets/${ticketId}/return`, { method: 'PATCH' });
+      if (onStatusApplied) {
+        onStatusApplied();
+        return;
+      }
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const addComment = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -78,6 +91,9 @@ export default function TicketDetailsPage({ ticketId, user, onBack, onStatusAppl
             {user.role === 'support' ? (
               <div className="mt-5 flex gap-2">
                 <button className="rounded-lg bg-emerald-600 px-4 py-2 text-white transition hover:scale-105" onClick={() => updateStatus('Завершена')}>Завершить</button>
+                {ticket.assignedTo === user.fullName ? (
+                  <button className="rounded-lg bg-amber-600 px-4 py-2 text-white transition hover:scale-105" onClick={returnTicket}>Вернуть тикет</button>
+                ) : null}
                 <button className="rounded-lg bg-rose-600 px-4 py-2 text-white transition hover:scale-105" onClick={() => updateStatus('Отменена')}>Отменить</button>
               </div>
             ) : null}

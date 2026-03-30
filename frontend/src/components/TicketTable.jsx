@@ -9,7 +9,16 @@ const formatDate = (value) => {
   });
 };
 
-export default function TicketTable({ tickets, onOpen, onAssign, onCancel, showAssign, compact = false }) {
+export default function TicketTable({
+  tickets,
+  onOpen,
+  onAssign,
+  onReturn,
+  onCancel,
+  showAssign,
+  currentSupportName,
+  compact = false
+}) {
   return (
     <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
       <table className="min-w-full border-collapse text-sm">
@@ -43,6 +52,11 @@ export default function TicketTable({ tickets, onOpen, onAssign, onCancel, showA
                     {showAssign && !ticket.assignedTo ? (
                       <button onClick={() => onAssign(ticket.id)} className="rounded bg-emerald-600 px-2 py-1 text-xs text-white">
                         Забрать
+                      </button>
+                    ) : null}
+                    {showAssign && ticket.assignedTo && ticket.assignedTo === currentSupportName ? (
+                      <button onClick={() => onReturn(ticket.id)} className="rounded bg-amber-600 px-2 py-1 text-xs text-white">
+                        Вернуть
                       </button>
                     ) : null}
                     {ticket.status !== 'Отменена' ? (
