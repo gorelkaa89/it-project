@@ -224,7 +224,6 @@ app.get('/api/tickets', authRequired, async (req, res) => {
     const result = await pool.query(
       `SELECT id, title, description, priority, status, created_by, assigned_to, due_date, created_at
        FROM tickets
-       WHERE assigned_to IS NULL OR assigned_to = ''
        ORDER BY created_at DESC`
     );
     return res.json(result.rows.map(mapTicket));
